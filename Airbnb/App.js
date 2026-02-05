@@ -6,6 +6,8 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const ExpressError = require("./utils/ExpressError.js");
 const Review = require("./models/review.js");
+const session = require("express-session");
+const flash = require("connect-flash");
 
 const listings = require("./routes/listing.js"); 
 const reviews = require("./routes/review.js");
@@ -33,8 +35,28 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true })); // this helps to parse form data like req.body.title to get title from form
 app.use(express.json()); 
 
+const sessionOptions = {
+  secret: "mysecretkey",
+  resave: false,
+  saveUninitialized: true,
+  cookie:{
+    expires: Date.now() + 7 * 24 * 60 * 60 * 1000 ,
+    maxAge: 7 * 24 * 60 * 60 * 1000 ,
+    httpOnly: true,
+  }
+};
+
 app.get("/", (req, res) => {
   res.send("Hi, I am root!");
+});
+
+app.use(session(sessionOptions));
+app.use(flash()); 
+
+app.use((req, res, next) => {
+  res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
+  next();
 });
 
 app.use("/listings", listings);
